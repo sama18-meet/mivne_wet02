@@ -38,6 +38,17 @@ int main() {
     std::cout << rt3->getAvgHighest(4) << std::endl;
     std::cout << "next should print 21/7 = 3" << std::endl;
     std::cout << rt3->getAvgHighest(7) << std::endl;
+    int lower;
+    int upper;
+    std::cout << "nest should be 0-1" << std::endl;
+    rt3->getValRange(3, 2, &lower, &upper);
+    std::cout << lower << "-" << upper << std::endl;
+    std::cout << "nest should be 1-2" << std::endl;
+    rt3->getValRange(3, 3, &lower, &upper);
+    std::cout << lower << "-" << upper << std::endl;
+    std::cout << "nest should be 0-1" << std::endl;
+    rt3->getValRange(2, 3, &lower, &upper);
+    std::cout << lower << "-" << upper << std::endl;
 
     return 0;
 }

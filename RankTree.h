@@ -111,7 +111,7 @@ private:
     Node* buildRankTreeOPKFromArray(int tree_size, Node* arr);
 
     // AVG HIGHEST
-    bool getSumOfHighestKeys(Node* node, int m, int* current_sum) const;
+    bool getSumOfHighestKeys(Node* node, int m, int* current_sum, int val, int* lowerBound, int* upperBound) const;
 
     /*
     Node* getMaxInSubtree(Node* root) const;
@@ -131,6 +131,7 @@ public:
     RankTreeOPK(RankTreeOPK* rt1, RankTreeOPK* rt2); // merge constructor. Does not delete old avls!
     int getSize() const;
     double getAvgHighest(int m) const;
+    bool getValRange(int val, int m, int* lowerBound, int* upperBound) const;
 
 
         /*
@@ -640,15 +641,28 @@ typename RankTreeOPK::Node* RankTreeOPK::buildRankTreeOPKFromArray(int tree_size
 double RankTreeOPK::getAvgHighest(int m) const {
     assert(m>0);
     int sum = 0;
-    if (getSumOfHighestKeys(root, m, &sum) == false) {
+    int lowerBound = 0;
+    int upperBound = 0;
+    if (getSumOfHighestKeys(root, m, &sum, 0, &lowerBound, &upperBound) == false) {
         assert(root->mulInSubtree < m);
         return -1; // there are no M players
     }
     return (double)sum / (double)m;
 }
 
+bool RankTreeOPK::getValRange(int val, int m, int* lowerBound, int* upperBound) const {
+    assert(m>0);
+    int sum = 0;
+    *lowerBound = 0;
+    *upperBound = 0;
+    if (getSumOfHighestKeys(root, m, &sum, val, lowerBound, upperBound) == false) {
+        assert(root->mulInSubtree < m);
+        return false; // there are no M players
+    }
+    return true;
+}
 
-bool RankTreeOPK::getSumOfHighestKeys(Node* node, int m, int* current_sum) const {
+bool RankTreeOPK::getSumOfHighestKeys(Node* node, int m, int* current_sum, int val, int* lowerBound, int* upperBound) const {
     assert(m>0);
     if (node == nullptr) {
         return false;
@@ -665,6 +679,8 @@ bool RankTreeOPK::getSumOfHighestKeys(Node* node, int m, int* current_sum) const
         else { // node->mulInSubtree == m
             assert(node->mulInSubtree == m);
             *current_sum += node->keysSumInSubtree;
+            *lowerBound += node->valsMul[val];
+            *upperBound += node->valsMul[val];
             return true;
         }
     }
@@ -672,23 +688,33 @@ bool RankTreeOPK::getSumOfHighestKeys(Node* node, int m, int* current_sum) const
         assert(prev_node != nullptr);
         assert(prev_node->mul > m);
         *current_sum += m*prev_node->key;
+        int not_val_mul = prev_node->mul - prev_node->vals[val];
+        *lowerBound += not_val_mul >= m ? 0 : m-not_val_mul;
+        *upperBound += prev_node->vals[val];
         return true;
     }
     if (node->mulInSubtree == m) {
         *current_sum += node->keysSumInSubtree;
+        *lowerBound += node->valsMul[val];
+        *upperBound += node->valsMul[val];
         return true;
     }
     // else: node->mulInsubtree < m
     *current_sum += node->keysSumInSubtree;
     m = m - node->mulInSubtree;
     if (prev_node->mul >= m) {
+        int not_val_mul = prev_node->mul - prev_node->vals[val];
+        *lowerBound += not_val_mul >= m ? 0 :m-not_val_mul;
+        *upperBound += fmin(m, prev_node->vals[val]);
         *current_sum += m*prev_node->key;
         return true;
     }
     else { // (prev_node->mul < m)
         *current_sum += prev_node->mul*prev_node->key;
+        *lowerBound += prev_node->vals[val];
+        *upperBound += prev_node->vals[val];
         m -= prev_node->mul;
-        return getSumOfHighestKeys(prev_node->left, m, current_sum);
+        return getSumOfHighestKeys(prev_node->left, m, current_sum, val, lowerBound, upperBound);
     }
 }
 
