@@ -23,6 +23,7 @@ private:
         int height;
         struct Node* left;
         struct Node* right;
+        Node() = default;
         Node(int key, int val):
                 key(key), mul(1), mulInSubtree(1), keysSumInSubtree(key), left(nullptr), right(nullptr), height(0) {
             for (int i=0; i<SCALE_MAX; ++i) {
@@ -34,6 +35,19 @@ private:
         };
         ~Node() = default;
         Node& operator=(const Node& n) {
+            key = n.key;
+            mul = n.mul;
+            mulInSubtree = n.mulInSubtree;
+            keysSumInSubtree = n.keysSumInSubtree;
+            left = n.left;
+            right = n.right;
+            for (int i=0; i<SCALE_MAX; ++i) {
+                vals[i] = (n.vals)[i];
+                valsMul[i] = (n.valsMul)[i];
+            }
+            return *this;
+        };
+        Node(const Node& n) {
             key = n.key;
             mul = n.mul;
             mulInSubtree = n.mulInSubtree;
@@ -87,18 +101,19 @@ private:
     void switchNodes(Node* higher_node, Node* lower_node);
 
 
-    /*
+    // MERGE
     template <class function, class param>
-    void applyInorderInternal(Node* node, function func, param p, int* done_nodes, int num_nodes);
+    void applyInorder(function func, param p);
     template <class function, class param>
-    void applyInorderOnKey(function func, param p, int num_nodes);
-    template <class function, class param>
-    void applyInorderOnKeyInternal(Node* node, function func, param p, int* done_nodes, int num_nodes);
+    void applyInorderInternal(Node* node, function func, param p, int* done_nodes);
+    static void insertNodeInArray(Node* arr, Node node, int idx);
+    int mergeSortedArrays(int size1, int size2, Node* arr1, Node* arr2, Node* arrMerged);
+    Node* buildRankTreeOPKFromArray(int tree_size, Node* arr);
 
-    static void mergeSortedArrays(int size1, int size2, OrderedPair* keys1, T* data1, OrderedPair* keys2, T* data, OrderedPair* keysMerged, T* dataMerged);
-    Node* buildRankTreeOPKFromArray(int n, OrderedPair* keyArr, T* dataArr);
-    template <class arrType>
-    static void insertInArray(arrType* arr, arrType element, int index);
+    // AVG HIGHEST
+    bool getSumOfHighestKeys(Node* node, int m, int* current_sum) const;
+
+    /*
     Node* getMaxInSubtree(Node* root) const;
      */
     void printBT(const std::string& prefix, const Node* node, bool isLeft) const;
@@ -113,18 +128,14 @@ public:
     bool insert(int key, int val);
     double getPercentOfValueInKeyBounds(int lowerKey, int higherKey, int value);
     bool remove(int key, int value);
-
-
-    /*
-
-    RankTreeOPK(RankTreeOPK<T>* rankTreeOPK1, RankTreeOPK<T>* rankTreeOPK2); // merge constructor
-
-    template <class function, class param>
-    void applyInorder(function func, param p, int num_nodes);
-
+    RankTreeOPK(RankTreeOPK* rt1, RankTreeOPK* rt2); // merge constructor. Does not delete old avls!
     int getSize() const;
-    T getMax() const;
-     */
+    double getAvgHighest(int m) const;
+
+
+        /*
+        T getMax() const;
+         */
     void printBT() const;
 
 };
@@ -507,64 +518,99 @@ void RankTreeOPK:: switchNodes(Node* higher_node, Node* lower_node) {
 }
 
 
-/*
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-///////////////////////////////////////////// APPLY_INORDER ///////////////////////////////////////////////////////////
+///////////////////////////////////////////// MERGE ///////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-template <class T>
-template <class function, class param>
-void RankTreeOPK<K, T>::applyInorder(function func, param p, int num_nodes) {
-    int done_nodes = 0;
-    applyInorderInternal<function, param>(root, func, p, &done_nodes, num_nodes);
+
+// notice that this method does not delete the two old RankTreeOPKs!
+RankTreeOPK::RankTreeOPK(RankTreeOPK* rt1, RankTreeOPK* rt2) {
+    int n1 = rt1->getSize();
+    int n2 = rt2->getSize();
+    Node* arr1 = new Node[n1];
+    Node* arr2 = new Node[n2];
+    rt1->applyInorder(insertNodeInArray, arr1);
+    rt2->applyInorder(insertNodeInArray, arr2);
+    Node* arrMerged = new Node[n1+ n2];
+    int new_size = mergeSortedArrays(n1, n2, arr1, arr2, arrMerged);
+    this->size = new_size;
+    root = buildRankTreeOPKFromArray(size, arrMerged);
+    delete[] arr1;
+    delete[] arr2;
+    delete[] arrMerged;
 }
 
-template <class T>
-template <class function, class param>
-void RankTreeOPK<K, T>::applyInorderOnKey(function func, param p, int num_nodes) {
-    int done_nodes = 0;
-    applyInorderOnKeyInternal<function, param>(root, func, p, &done_nodes, num_nodes);
+int RankTreeOPK::getSize() const {
+    return this->size;
 }
 
-template <class T>
 template <class function, class param>
-void RankTreeOPK<K, T>::applyInorderInternal(Node* node, function func, param p, int* done_nodes, int num_nodes) {
+void RankTreeOPK::applyInorder(function func, param p) {
+    int done_nodes = 0;
+    applyInorderInternal<function, param>(root, func, p, &done_nodes);
+}
+
+
+template <class function, class param>
+void RankTreeOPK::applyInorderInternal(Node* node, function func, param p, int* done_nodes) {
     if (node == nullptr) {
         return;
     }
-    applyInorderInternal(node->left, func, p, done_nodes, num_nodes);
-    if (num_nodes == ALL_NODES || *done_nodes < num_nodes) {
-        func(p, node->data, *done_nodes);
-        (*done_nodes)++;
-    }
-    applyInorderInternal(node->right, func, p, done_nodes, num_nodes);
-}
-
-template <class T>
-template <class function, class param>
-void RankTreeOPK<K, T>::applyInorderOnKeyInternal(Node* node, function func, param p, int* done_nodes, int num_nodes) {
-    if (node == nullptr || (num_nodes!=ALL_NODES && *done_nodes > num_nodes)) {
-        return;
-    }
-    applyInorderOnKeyInternal(node->left, func, p, done_nodes, num_nodes);
-    func(p, node->key, *done_nodes);
+    applyInorderInternal(node->left, func, p, done_nodes);
+    func(p, *node, *done_nodes);
     (*done_nodes)++;
-    applyInorderOnKeyInternal(node->right, func, p, done_nodes, num_nodes);
+    applyInorderInternal(node->right, func, p, done_nodes);
 }
 
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-///////////////////////////////////////////// BUILD_RankTreeOPK ///////////////////////////////////////////////////////
-///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+void RankTreeOPK::insertNodeInArray(Node* arr, Node node, int idx) {
+    arr[idx] = node;
+}
 
 
-template <class T>
-typename RankTreeOPK<T>::Node* RankTreeOPK<T>::buildRankTreeOPKFromArray(int tree_size, OrderedPair* keyArr, T* dataArr) {
+int RankTreeOPK::mergeSortedArrays(int size1, int size2, Node* arr1, Node* arr2, Node* arrMerged) {
+    int curr1 = 0;
+    int curr2 = 0;
+    int currI = 0;
+    while (curr1 < size1 && curr2 < size2) {
+        if (arr1[curr1].key < arr2[curr2].key) {
+            arrMerged[currI] = arr1[curr1];
+            curr1++;
+        } else if (arr1[curr1].key > arr2[curr2].key) {
+            arrMerged[currI] = arr2[curr2];
+            curr2++;
+        }
+        else { // equal
+            Node node = Node(arr1[curr1].key, 0);
+            node.mul = arr1[curr1].mul + arr2[curr2].mul;
+            for (int i=0; i<SCALE_MAX; ++i) {
+                node.vals[i] = arr1[curr1].vals[i] + arr2[curr2].vals[i];
+            }
+            arrMerged[currI] = node;
+            curr1++;
+            curr2++;
+        }
+        currI++;
+    }
+    while (curr1 < size1) {
+        arrMerged[currI] = arr1[curr1];
+        currI++;
+        curr1++;
+    }
+    while (curr2 < size2) {
+        arrMerged[currI] = arr2[curr2];
+        currI++;
+        curr2++;
+    }
+    return currI;
+}
+
+typename RankTreeOPK::Node* RankTreeOPK::buildRankTreeOPKFromArray(int tree_size, Node* arr) {
     if (tree_size <= 0) {
         return nullptr;
     }
     int full_rows = log2(tree_size+1); // rounds down
     int remainder = tree_size + 1 - pow(2,full_rows); // number of nodes in last row
-    int r1, r2; //
+    int r1, r2;
     int last_row_size = pow(2,full_rows);
     if (remainder <= last_row_size/2) {
         r1 = remainder;
@@ -576,93 +622,75 @@ typename RankTreeOPK<T>::Node* RankTreeOPK<T>::buildRankTreeOPKFromArray(int tre
     }
     int left_size = pow(2,(full_rows-1)) - 1 + r1;
     int right_size = pow(2,(full_rows-1)) - 1 + r2;
-    OrderedPair* leftKeyArr = keyArr;
-    T* leftDataArr = dataArr;
-    OrderedPair* rightKeyArr = keyArr+left_size + 1;
-    T* rightDataArr = dataArr+left_size + 1;
-    OrderedPair currentKey = keyArr[left_size];
-    T currentData = dataArr[left_size];
-    Node* n = new Node(currentKey, currentData);
-    n->left = buildRankTreeOPKFromArray(left_size, leftKeyArr, leftDataArr);
-    n->right = buildRankTreeOPKFromArray(right_size, rightKeyArr, rightDataArr);
-    n->height = std::max(getHeight(n->left), getHeight(n->right)) + 1;
+
+    Node* leftArr = arr;
+    Node* rightArr = arr+left_size+1;
+    Node currentNode = arr[left_size];
+    Node* n = new Node(currentNode);
+    n->left = buildRankTreeOPKFromArray(left_size, leftArr);
+    n->right = buildRankTreeOPKFromArray(right_size, rightArr);
+    updateNodeStructuralProperties(n);
     return n;
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-///////////////////////////////////////////// MERGE ///////////////////////////////////////////////////////////////////
+//////////////////////////////////////////////// GET_AVG_M_HIGHEST ////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-template <class T>
-int RankTreeOPK<T>::getSize() const {
-    return this->size;
+double RankTreeOPK::getAvgHighest(int m) const {
+    assert(m>0);
+    int sum = 0;
+    if (getSumOfHighestKeys(root, m, &sum) == false) {
+        assert(root->mulInSubtree < m);
+        return -1; // there are no M players
+    }
+    return (double)sum / (double)m;
 }
 
-template <class T>
-template <class arrType>
-void RankTreeOPK<T>::insertInArray(arrType* arr, arrType element, int index) {
-    arr[index] = element;
-}
 
-template <class T>
-void RankTreeOPK<T>::mergeSortedArrays(int size1, int size2, OrderedPair* keys1, T* data1, OrderedPair* keys2, T* data2,
-                                       OrderedPair* keysMerged, T* dataMerged) {
-    int curr1 = 0;
-    int curr2 = 0;
-    int currI = 0;
-    while (curr1 < size1 && curr2 < size2) {
-        if (keys1[curr1] < keys2[curr2]) {
-            keysMerged[currI] = keys1[curr1];
-            dataMerged[currI] = data1[curr1];
-            curr1++;
-        } else {
-            keysMerged[currI] = keys2[curr2];
-            dataMerged[currI] = data2[curr2];
-            curr2++;
+bool RankTreeOPK::getSumOfHighestKeys(Node* node, int m, int* current_sum) const {
+    assert(m>0);
+    if (node == nullptr) {
+        return false;
+    }
+    Node* prev_node = nullptr;
+    while (node != nullptr && node->mulInSubtree > m) {
+        prev_node = node;
+        node = node->right;
+    }
+    if (prev_node == nullptr) { // didn't enter loop
+        if (node->mulInSubtree < m) { // there arent enough players
+            return false;
         }
-        currI++;
+        else { // node->mulInSubtree == m
+            assert(node->mulInSubtree == m);
+            *current_sum += node->keysSumInSubtree;
+            return true;
+        }
     }
-    while (curr1 < size1) {
-        keysMerged[currI] = keys1[curr1];
-        dataMerged[currI] = data1[curr1];
-        currI++;
-        curr1++;
+    if (node == nullptr) {
+        assert(prev_node != nullptr);
+        assert(prev_node->mul > m);
+        *current_sum += m*prev_node->key;
+        return true;
     }
-    while (curr2 < size2) {
-        keysMerged[currI] = keys2[curr2];
-        dataMerged[currI] = data2[curr2];
-        currI++;
-        curr2++;
+    if (node->mulInSubtree == m) {
+        *current_sum += node->keysSumInSubtree;
+        return true;
+    }
+    // else: node->mulInsubtree < m
+    *current_sum += node->keysSumInSubtree;
+    m = m - node->mulInSubtree;
+    if (prev_node->mul >= m) {
+        *current_sum += m*prev_node->key;
+        return true;
+    }
+    else { // (prev_node->mul < m)
+        *current_sum += prev_node->mul*prev_node->key;
+        m -= prev_node->mul;
+        return getSumOfHighestKeys(prev_node->left, m, current_sum);
     }
 }
-
-template <class T>
-// notice that this method does not delete the two old RankTreeOPKs!
-RankTreeOPK<T>::RankTreeOPK(RankTreeOPK<T>* rankTreeOPK1, RankTreeOPK<T>* rankTreeOPK2) {
-    int n1 = rankTreeOPK1->getSize();
-    int n2 = rankTreeOPK2->getSize();
-    T* dataArray1 = new T[n1];
-    T* dataArray2 = new T[n2];
-    rankTreeOPK1->applyInorder(insertInArray<T>, dataArray1, ALL_NODES);
-    rankTreeOPK2->applyInorder(insertInArray<T>, dataArray2, ALL_NODES);
-    OrderedPair* keyArray1 = new OrderedPair[n1];
-    OrderedPair* keyArray2 = new OrderedPair[n2];
-    rankTreeOPK1->applyInorderOnKey(insertInArray<OrderedPair>, keyArray1, ALL_NODES);
-    rankTreeOPK2->applyInorderOnKey(insertInArray<OrderedPair>, keyArray2, ALL_NODES);
-    T* dataMerged = new T[n1+ n2];
-    OrderedPair* keysMerged = new OrderedPair[n1+n2];
-    mergeSortedArrays(n1, n2, keyArray1, dataArray1, keyArray2, dataArray2, keysMerged, dataMerged);
-    this->size = n1+n2;
-    root = buildRankTreeOPKFromArray(size, keysMerged, dataMerged);
-    delete[] dataArray1;
-    delete[] dataArray2;
-    delete[] keyArray1;
-    delete[] keyArray2;
-    delete[] dataMerged;
-    delete[] keysMerged;
-}
-
-*/
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 //////////////////////////////////////////////// PRINT ////////////////////////////////////////////////////////////////
@@ -692,9 +720,7 @@ void RankTreeOPK::printBT(const std::string& prefix, const Node* node, bool isLe
 }
 
 void RankTreeOPK::printBT() const {
-    std::cout << "koko" << std::endl;
-    int x=5;
-    std::cout << x << std::endl;
+    std::cout << "printing RankTree" << std::endl;
     std::cout << "key, mul, mulInSubtree, vals, valsMul" << std::endl;
     printBT("", root, false);
 }

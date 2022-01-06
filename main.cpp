@@ -19,8 +19,25 @@ int main() {
     rt->printBT();
     std::cout << "done. next function should print 0.5" << std::endl;
     std::cout << rt->getPercentOfValueInKeyBounds(-1, 7, 3) << std::endl;
-    std::cout << "printing ranks 6-11" << std::endl;
-    std::cout << "Hello, World!" << std::endl;
+    std::cout << "------------------------------------------" << std::endl;
+    RankTreeOPK* rt2 = new RankTreeOPK(4);
+    rt2->insert(3, 2);
+    rt2->insert(3, 3);
+    rt2->insert(3, 3);
+    rt2->insert(3, 3);
+    rt2->insert(4, 3);
+    rt2->insert(2, 1);
+    rt2->insert(2, 2);
+    rt2->printBT();
+    RankTreeOPK* rt3 = new RankTreeOPK(rt, rt2);
+    std::cout << "Printing merged rankTree" << std::endl;
+    rt3->printBT();
+    std::cout << "next should print 10/3 = 3.33333" << std::endl;
+    std::cout << rt3->getAvgHighest(3) << std::endl;
+    std::cout << "next should print 13/4 = 3.25" << std::endl;
+    std::cout << rt3->getAvgHighest(4) << std::endl;
+    std::cout << "next should print 21/7 = 3" << std::endl;
+    std::cout << rt3->getAvgHighest(7) << std::endl;
 
     return 0;
 }
