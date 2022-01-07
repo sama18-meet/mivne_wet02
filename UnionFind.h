@@ -15,13 +15,15 @@ private:
         int size;
         int parent;
     };
-    const int num_of_groups;
-    A membersArray; //is general so could for instance be a hashtable. has to support subset (meaning [])
+    int num_of_groups;
+    //is general so could for instance be a hashtable. A has to support subset (meaning []), and objects in A need to support getSet
+    A membersArray;
     Set* setArr;
 
 public:
     UnionFind(int num_of_groups, A membersArray);
-    ~UnionFind();
+    UnionFind() = default;
+    ~UnionFind() = default;
     void Union(int setID1, int setID2, T* parentValue, T* childValue); //TODO change name, right now is this way because union is builtin word in c++
     T find(int member);
     void print(); //TODO remember to delete, written like shit
@@ -42,15 +44,15 @@ UnionFind<T, A>::UnionFind(int num_of_groups, A membersArray):num_of_groups(num_
         setArr[i].size = 1;
         setArr[i].parent = NO_PARENT;
         setArr[i].setID = i;
-        setArr[i].value = T(i); //TODO put in header of class that T should have a constructor that accepts an integer
+        setArr[i].value = T(i);
     }
 }
-
+/* TODO not sure how to write this properly
 template <class T, class A>
 UnionFind<T, A>::~UnionFind() {
-    delete []setArr;
+    //~A(setArr);
 }
-
+*/
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////// FIND ////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
@@ -58,10 +60,9 @@ UnionFind<T, A>::~UnionFind() {
 template <class T, class A>
 T UnionFind<T, A>:: find(int member) {
     assert(member>=0);
-    int setID = membersArray[member]; //substracting one to comply with array indexes
+    int setID = membersArray[member].getSet();
     assert(setID<num_of_groups && setID>=0); //TODO when testing make sure there is a coherence with setID and array indexes
     int parent = findParent(setID);
-    shrinkTree(setID, parent); //TODO need to put this in findParent (line above this)
     return setArr[parent].value;
 }
 
@@ -71,6 +72,7 @@ int UnionFind<T, A>:: findParent(int setID) {
     while (setArr[root].parent != NO_PARENT) {
         root = setArr[root].parent;
     }
+    shrinkTree(setID, root);
     return root;
 }
 
@@ -91,8 +93,7 @@ void UnionFind<T, A>::shrinkTree(int setID, int parent) {
 //parentValue and childValue are used so can have access to update values outside of class
 template <class T, class A>
 void UnionFind<T, A>:: Union(int setID1, int setID2, T* parentValue, T* childValue) {
-    int parent1 = findParent(setID1), parent2 = findParent(setID2); //TODO make sure this is on line with UnionFind complexity because not receiving pointer to top level set
-
+    int parent1 = findParent(setID1), parent2 = findParent(setID2);
     if (parent1==parent2) { //if already part of the same set do nothing
         return;
     }
