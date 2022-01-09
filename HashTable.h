@@ -15,151 +15,189 @@
 template <class T>
 class HashTable {
 private:
+    // node in linked list (chain hashing)
     struct Node {
         int id;
         T data; //assumes T has an empty constructor
         struct Node* next;
         struct Node* previous;
         Node(int id, T value): id(id), data(value), next(nullptr), previous(nullptr) {};
-        Node(): id(UNINITIALIZED_ID), next(nullptr), previous(nullptr), data(T()) {};
+        Node() : id(UNINITIALIZED_ID), next(nullptr), previous(nullptr), data(T()) {};
         ~Node() = default;
     };
-    int arraySize=START_SIZE;
-    int numOfMembers=0;
-    Node* hashArray = new Node[arraySize]; //TODO maybe change to pointers instead od instances which is weird
+    int arraySize;
+    int numOfMembers;
+    Node** hashArray; //TODO maybe change to pointers instead od instances which is weird
 
 
 public:
-    HashTable() = default;
+    HashTable();
     ~HashTable();
     T operator[](int id);
-    bool add(int id, T value);
+    bool insert(int id, T value);
     bool remove(int id);
     void print();
 
 private:
     Node* find(int id);
+    void addToTopOfList(Node* newRoot, int cell);
     void updateSize();
-    void changeSize(float factor);
+    void changeSize(double factor);
     int hashFunc(int id);
     Node* findInList(Node* root, int id);
     void deleteList(Node* root);
-    void removeFromList(Node* root);
-    float getStressState();
-    void houseList(Node* nodeToAdd, Node* newHashArray);
-    void addToTopOfList(Node* newRoot, Node* nodeToAdd);
+    void removeFromList(Node* nodeToRemove, int cell);
+    double getStressState();
+    void houseList(Node* nodeToAdd, Node** newHashArray);
 };
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////// C'tor & D'tor ///////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+// checked v
+template <class T>
+HashTable<T>::HashTable() : arraySize(START_SIZE), numOfMembers(0) {
+    hashArray = new Node*[arraySize];
+    for (int i=0; i<arraySize; ++i) {
+        hashArray[i] = nullptr;
+    }
+}
 
 template <class T>
 HashTable<T>::~HashTable() {
-    for (int i = 0; i < numOfMembers; ++i) {
-        deleteList(&hashArray[i]);
+    for (int i=0; i < arraySize; ++i) {
+        deleteList(hashArray[i]);
     }
-    delete []hashArray; //redundant?
-    //TODO delete T values as well?
+    delete[] hashArray;
 }
 
 template <class T>
 void HashTable<T>::deleteList(Node* root) {
-    if (root->next != nullptr) {
-        deleteList(root->next);
+    if (root == nullptr) {
+        return;
     }
+    deleteList(root->next);
+    delete root;
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////// FIND ////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
+// checked v
 template <class T>
 T HashTable<T>:: operator[](int id) {
-    Node* root = find(id);
-    if (root->id == id) {
-        return root->data;
+    Node* node = find(id);
+    if (node == nullptr) {
+        return T();
     }
-    return T();
+    return node->data;
 }
+
 template <class T>
 typename HashTable<T>::Node* HashTable<T>::find(int id) {
     int cell = hashFunc(id);
-    Node* listStart = &hashArray[cell];
-    return findInList(listStart, id); //responsibility of the caller to make sure that got wanted id back
+    return findInList(hashArray[cell], id);
 }
 
 template <class T>
 typename HashTable<T>::Node* HashTable<T>::findInList(Node* root, int id) {
-    while (root->next != nullptr && id != root->id) {
-        root = root->next;
+    if (root == nullptr) {
+        return nullptr;
     }
-    return root; //responsibility of the caller to make sure that got wanted id back
+    if (root->id == id) {
+        return root;
+    }
+    return findInList(root->next, id);
 }
 
 template <class T>
 int HashTable<T>::hashFunc(int id) {
     assert(id>=0);
-    return (id % arraySize);//modulo func promises even distribution
+    return (id % arraySize); //modulo func promises even distribution
 }
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-///////////////////////////////////////////// ADD & REMOVE ////////////////////////////////////////////////////////////
+////////////////////////////////////////// Insert & REMOVE ////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
 //returns false if id already existed
 template <class T>
-bool HashTable<T>::add(int id, T value) {
+bool HashTable<T>::insert(int id, T value) {
     Node* root = find(id);
-    if (root->id==id) {
+    if (root != nullptr) {
         return false;
     }
-    root->next = new Node(id, value);
-    root->next->previous = root;
+    Node* new_node = new Node(id, value);
+    int cell = hashFunc(id);
+    addToTopOfList(new_node, cell);
     numOfMembers++;
     updateSize();
     return true;
 }
 
-//returns false if id already existed
+template <class T>
+void HashTable<T>::addToTopOfList(Node* newRoot, int cell) {
+    Node* oldRoot = hashArray[cell];
+    hashArray[cell] = newRoot;
+    newRoot->next = oldRoot;
+    newRoot->previous = nullptr;
+    if (oldRoot != nullptr) {
+        oldRoot->previous = newRoot;
+    }
+}
+
+//returns false if id doesn't existed
 template <class T>
 bool HashTable<T>::remove(int id) {
     Node* root = find(id);
-    if (root->id != id) {
+    if (root == nullptr) {
         return false;
     }
-    removeFromList(root);
+    int cell = hashFunc(id);
+    removeFromList(root, cell);
     numOfMembers--;
     updateSize();
     return true;
 }
 
 template <class T>
-void HashTable<T>::removeFromList(Node* root) {
-    root->previous->next = root->next;
-    if (root->next != nullptr) { //root->previous is always not equal to nullptr
-        root->next->previous = root->previous;
+void HashTable<T>::removeFromList(Node* nodeToRemove, int cell) {
+    if (nodeToRemove->previous != nullptr) {
+        if (nodeToRemove->next != nullptr) {
+            nodeToRemove->previous->next = nodeToRemove->next;
+            nodeToRemove->next->previous = nodeToRemove->previous;
+        }
+        else { // if (nodeToRemove->next == nullptr)
+            nodeToRemove->previous->next = nullptr;
+        }
     }
-    delete root;
+    else {
+        hashArray[cell] = nodeToRemove->next;
+        if (hashArray[cell] != nullptr) {
+            hashArray[cell]->previous = nullptr;
+        }
+    }
+    delete nodeToRemove;
 }
+
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////// CHANGE SIZE /////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
-
+// checked v
 template <class T>
-float HashTable<T>:: getStressState() {
-    return float(numOfMembers) / arraySize;
+double HashTable<T>:: getStressState() {
+    return (double)numOfMembers / (double)arraySize;
 }
 
 template <class T>
 void HashTable<T>::updateSize() {
-    float stressFactor = getStressState();
-    if (stressFactor >= MAX_STRESS) {
+    double stressFactor = getStressState();
+    if (stressFactor > MAX_STRESS) {
         changeSize(INCREASE_FACTOR);
         return;
     }
-    else if (stressFactor <= MIN_STRESS) {
+    else if (stressFactor < MIN_STRESS) {
         if (arraySize <= START_SIZE) { //START_SIZE is the minimum size of HashTable
             return;
         }
@@ -169,38 +207,35 @@ void HashTable<T>::updateSize() {
 }
 
 template <class T>
-void HashTable<T>::changeSize(float factor) {
+void HashTable<T>::changeSize(double factor) {
     int oldArraySize = arraySize;
-    arraySize = int(arraySize * factor); //factor should be 2 or 0.5
-    Node* newHashArray = new Node[arraySize];
-    for (int i = 0; i < oldArraySize; ++i) {
-        houseList(&hashArray[i], newHashArray);
-    }
-    Node* oldHashArray = hashArray;
+    int newArraySize = int(oldArraySize * factor); //factor should be 2 or 0.5
+    assert(newArraySize == oldArraySize*factor); // else complexity is not correct
+    arraySize = newArraySize;
+    Node** oldHashArray = hashArray;
+    Node** newHashArray = new Node*[arraySize];
     hashArray = newHashArray;
-    delete []oldHashArray;
+    for (int i=0; i<newArraySize; ++i) {
+        newHashArray[i] = nullptr;
+    }
+    for (int i=0; i<oldArraySize; ++i) {
+        houseList(oldHashArray[i], newHashArray);
+    }
+    delete[] oldHashArray;
 }
 
 template <class T>
-void HashTable<T>::houseList(Node* nodeToAdd, Node* newHashArray) {
-    Node* newRoot, newSecondNode;
-    while (nodeToAdd->next != nullptr) {
-        nodeToAdd = nodeToAdd->next;
-        newRoot = &newHashArray[hashFunc(nodeToAdd->id)];
-        addToTopOfList(newRoot, nodeToAdd);
+void HashTable<T>::houseList(Node* head, Node** newHashArray) {
+    if (head == nullptr) {
+        return;
     }
+    houseList(head->next, newHashArray);
+    int cell = hashFunc(head->id);
+    head->next = nullptr;
+    head->previous = nullptr;
+    addToTopOfList(head, cell);
 }
 
-template <class T>
-void HashTable<T>::addToTopOfList(Node* newRoot, Node* nodeToAdd) {
-    Node* secondInLine = newRoot->next;
-    newRoot->next = nodeToAdd;
-    nodeToAdd->next = secondInLine;
-    nodeToAdd->previous = newRoot;
-    if (secondInLine != nullptr) {
-        secondInLine->previous = nodeToAdd;
-    }
-}
 
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////// PRINT ///////////////////////////////////////////////////////////////////
@@ -210,14 +245,18 @@ void HashTable<T>::addToTopOfList(Node* newRoot, Node* nodeToAdd) {
 template <class T>
 void HashTable<T>::print() {
     Node* n;
+    std::cout << "--------------------------------------------------------------" <<std::endl;
     std::cout << "numOfMembers: " << numOfMembers << " arraySize: " << arraySize << std::endl;
     for (int i = 0; i < arraySize; ++i) {
         std::cout << i << ": ";
-        n = &hashArray[i];
-        while (n->next != nullptr) {
-            n= n->next;
-            std::cout << n->id << "->";
-        }
+        n = hashArray[i];
+         do {
+             if (n==nullptr) {
+                 continue;
+             }
+             std::cout << "(" << n->id << "," << n->data->getData() << ") " << "->";
+             n = n->next;
+         } while (n != nullptr);
         std::cout << std::endl;
     }
 }
