@@ -7,9 +7,13 @@ Group::Group(int id) : id(id), numPlayers(0), numLvl0Players(0) {
     }
 }
 
+int Group::getId() {
+    return id;
+}
+
 void Group::swallow(Group* prey) {
     RankTreeOPK newPlayersTree = RankTreeOPK(playersTree, prey->playersTree);
-    delete playersTree;
+    delete &playersTree;
     playersTree = newPlayersTree;
     numPlayers += prey->numPlayers;
     for (int i=0; i<SCALE_MAX; ++i) {
@@ -59,8 +63,8 @@ void Group::changePlayerScore(int lvl, int oldScore, int newScore) {
     }
 }
 
-double Group::getPercentOfPlayersWithScoreInBounds(int score, int lowerLvl, int higherLvl) const {
-    return getPercentOfValueInKeyBounds(lowerLvl, higherLvl, score);
+bool Group::getPercentOfPlayersWithScoreInBounds(int score, int lowerLvl, int higherLvl, double* res) const {
+    return playersTree.getPercentOfValueInKeyBounds(lowerLvl, higherLvl, score, res);
 }
 
 bool Group::averageHighestPlayerLevelByGroup(int m, double* res) const {
@@ -75,5 +79,6 @@ bool Group::getPlayersBound(int score, int m, int* lowerBound, int* higherBound)
     if (m > numPlayers) {
         return false;
     }
-    getValRange(score, m, lowerBound, higherBound);
+    playersTree.getValRange(score, m, lowerBound, higherBound);
+    return true;
 }

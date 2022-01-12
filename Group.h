@@ -3,8 +3,6 @@
 
 #include "RankTree.h"
 
-#define SCALE_MAX 200
-
 class Group {
 private:
     int id;
@@ -16,12 +14,13 @@ private:
 public:
     Group(int id);
     ~Group() = default;
+    int getId();
     void swallow(Group* prey);
     void addPlayerOfLvl0(int score);
     void removePlayer(int lvl, int score);
     void increasePlayerLvl(int oldLvl, int newLvl, int score);
     void changePlayerScore(int lvl, int oldScore, int newScore);
-    double getPercentOfPlayersWithScoreInBounds(int score, int lowerLvl, int higherLvl) const;
+    bool getPercentOfPlayersWithScoreInBounds(int score, int lowerLvl, int higherLvl, double* res) const;
     bool averageHighestPlayerLevelByGroup(int m, double* res) const;
     bool getPlayersBound(int score, int m, int* lowerBound, int* higherBound) const;
 };

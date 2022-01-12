@@ -27,7 +27,7 @@ private:
     };
     int arraySize;
     int numOfMembers;
-    Node** hashArray; //TODO maybe change to pointers instead od instances which is weird
+    Node** hashArray;
 
 
 public:
@@ -77,6 +77,7 @@ void HashTable<T>::deleteList(Node* root) {
         return;
     }
     deleteList(root->next);
+    delete root->data;
     delete root;
 }
 
@@ -88,6 +89,7 @@ template <class T>
 T HashTable<T>:: operator[](int id) {
     Node* node = find(id);
     if (node == nullptr) {
+        assert(0==1); // T() in the following line needs to be changed to nullptr
         return T();
     }
     return node->data;
