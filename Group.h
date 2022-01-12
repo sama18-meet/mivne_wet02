@@ -23,6 +23,7 @@ public:
     bool getPercentOfPlayersWithScoreInBounds(int score, int lowerLvl, int higherLvl, double* res) const;
     bool averageHighestPlayerLevelByGroup(int m, double* res) const;
     bool getPlayersBound(int score, int m, int* lowerBound, int* higherBound) const;
+    void getValRangeLvl0Players(int score, int m, int* lowerBound, int* higherBound) const;
 };
 
 
