@@ -89,8 +89,7 @@ template <class T>
 T HashTable<T>:: operator[](int id) {
     Node* node = find(id);
     if (node == nullptr) {
-        assert(0==1); // T() in the following line needs to be changed to nullptr
-        return T();
+        return nullptr;
     }
     return node->data;
 }

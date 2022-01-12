@@ -1,7 +1,7 @@
 #include"library2.h"
 #include"PlayersManager.h"
 
-void* init(int k, int scale) {
+void* Init(int k, int scale) {
     try {
         PlayersManager *DS = new PlayersManager(k, scale);
         return (void*)DS;
@@ -11,7 +11,7 @@ void* init(int k, int scale) {
     }
 }
 
-StatusType mergeGroups(void *DS, int GroupID1, int GroupID2) {
+StatusType MergeGroups(void *DS, int GroupID1, int GroupID2) {
     if (DS == nullptr) {
         return INVALID_INPUT;
     }
@@ -29,7 +29,7 @@ StatusType mergeGroups(void *DS, int GroupID1, int GroupID2) {
     }
 }
 
-StatusType addPlayer(void *DS, int PlayerID, int GroupID, int score) {
+StatusType AddPlayer(void *DS, int PlayerID, int GroupID, int score) {
     if (DS == nullptr) {
         return INVALID_INPUT;
     }
@@ -48,7 +48,7 @@ StatusType addPlayer(void *DS, int PlayerID, int GroupID, int score) {
     }
 }
 
-StatusType removePlayer(void *DS, int PlayerID) {
+StatusType RemovePlayer(void *DS, int PlayerID) {
     if (DS == nullptr || PlayerID <= 0) {
         return INVALID_INPUT;
     }
@@ -62,7 +62,7 @@ StatusType removePlayer(void *DS, int PlayerID) {
     }
 }
 
-StatusType increasePlayerIDLevel(void *DS, int PlayerID, int LevelIncrease) {
+StatusType IncreasePlayerIDLevel(void *DS, int PlayerID, int LevelIncrease) {
     if (DS == nullptr || PlayerID <= 0 || LevelIncrease <= 0) {
         return INVALID_INPUT;
     }
@@ -76,7 +76,7 @@ StatusType increasePlayerIDLevel(void *DS, int PlayerID, int LevelIncrease) {
     }
 }
 
-StatusType changePlayerIDScore(void *DS, int PlayerID, int NewScore) {
+StatusType ChangePlayerIDScore(void *DS, int PlayerID, int NewScore) {
     if (DS == nullptr) {
         return INVALID_INPUT;
     }
@@ -94,7 +94,7 @@ StatusType changePlayerIDScore(void *DS, int PlayerID, int NewScore) {
     }
 }
 
-StatusType getPercentOfPlayersWithScoreInBounds
+StatusType GetPercentOfPlayersWithScoreInBounds
             (void *DS, int GroupID, int score, int lowerLevel, int higherLevel, double * players) {
     if (DS == nullptr || players == nullptr) {
         return INVALID_INPUT;
@@ -113,7 +113,7 @@ StatusType getPercentOfPlayersWithScoreInBounds
     }
 }
 
-StatusType averageHighestPlayerLevelByGroup(void *DS, int GroupID, int m, double * avgLevel) {
+StatusType AverageHighestPlayerLevelByGroup(void *DS, int GroupID, int m, double * avgLevel) {
     if (DS == nullptr || avgLevel == nullptr) {
         return INVALID_INPUT;
     }
@@ -131,7 +131,7 @@ StatusType averageHighestPlayerLevelByGroup(void *DS, int GroupID, int m, double
     }
 }
 
-StatusType getPlayersBound(void *DS, int GroupID, int score, int m, int* LowerBoundPlayers, int* HigherBoundPlayers) {
+StatusType GetPlayersBound(void *DS, int GroupID, int score, int m, int* LowerBoundPlayers, int* HigherBoundPlayers) {
     if (DS == nullptr || LowerBoundPlayers == nullptr || HigherBoundPlayers == nullptr) {
         return INVALID_INPUT;
     }
