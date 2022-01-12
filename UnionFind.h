@@ -24,7 +24,6 @@ public:
     UnionFind() = delete;
     ~UnionFind();
     int unite(int setId1, int setId2);
-                                        // TODO: union should return the new Id.
     T* find(int setId);
     void print(); //TODO remember to delete, written like shit
 

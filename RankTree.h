@@ -126,15 +126,10 @@ public:
     bool insert(int key, int val);
     bool getPercentOfValueInKeyBounds(int lowerKey, int higherKey, int value, double* res) const;
     bool remove(int key, int value);
-    RankTreeOPK(const RankTreeOPK& rt1, const RankTreeOPK& rt2); // merge constructor. Does not delete old avls!
+    RankTreeOPK(RankTreeOPK* rt1, RankTreeOPK* rt2); // merge constructor. Does not delete old avls!
     int getSize() const;
     double getAvgHighest(int m) const;
     bool getValRange(int val, int m, int* lowerBound, int* upperBound) const;
-
-
-        /*
-        T getMax() const;
-         */
     void printBT() const;
 
 };

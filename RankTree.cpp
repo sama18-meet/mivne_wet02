@@ -209,16 +209,16 @@ bool RankTreeOPK::getPercentOfValueInKeyBounds(int lowerKey, int higherKey, int 
     int lowerKeyVals[SCALE_MAX] = {0};
     int lowerMul = get(lowerKey, &lowerKeyMulRank, &lowerKeySumRank, lowerValsMulRank, lowerKeyVals);
     int higherKeyMulRank = 0;
-    // int higherKeySumRank = 0;
+    int higherKeySumRank = 0;
     int higherValsMulRank[SCALE_MAX] = {0};
-    // int higherKeyVals[SCALE_MAX] {0};
-    // int higherMul = get(higherKey, &higherKeyMulRank, &higherKeySumRank, higherValsMulRank, higherKeyVals);
+    int higherKeyVals[SCALE_MAX] {0};
+    int higherMul = get(higherKey, &higherKeyMulRank, &higherKeySumRank, higherValsMulRank, higherKeyVals);
     int keyMulInRange = higherKeyMulRank - lowerKeyMulRank + lowerMul;
     int valueMulInRange = higherValsMulRank[value] - lowerValsMulRank[value] + lowerKeyVals[value];
     if (keyMulInRange == 0) {
         return false;
     }
-    *res = (double)valueMulInRange / (double)keyMulInRange;
+    *res = 100 * (double)valueMulInRange / (double)keyMulInRange;
     return true;
 }
 
@@ -387,13 +387,13 @@ void RankTreeOPK:: switchNodes(Node* higher_node, Node* lower_node) {
 
 
 // notice that this method does not delete the two old RankTreeOPKs!
-RankTreeOPK::RankTreeOPK(const RankTreeOPK& rt1, const RankTreeOPK& rt2) {
-    int n1 = rt1.getSize();
-    int n2 = rt2.getSize();
+RankTreeOPK::RankTreeOPK(RankTreeOPK* rt1, RankTreeOPK* rt2) {
+    int n1 = rt1->getSize();
+    int n2 = rt2->getSize();
     Node* arr1 = new Node[n1];
     Node* arr2 = new Node[n2];
-    rt1.applyInorder(insertNodeInArray, arr1);
-    rt2.applyInorder(insertNodeInArray, arr2);
+    rt1->applyInorder(insertNodeInArray, arr1);
+    rt2->applyInorder(insertNodeInArray, arr2);
     Node* arrMerged = new Node[n1+ n2];
     int new_size = mergeSortedArrays(n1, n2, arr1, arr2, arrMerged);
     this->size = new_size;

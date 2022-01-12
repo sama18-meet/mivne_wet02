@@ -6,7 +6,7 @@
 class Group {
 private:
     int id;
-    RankTreeOPK playersTree;
+    RankTreeOPK* playersTree;
     int numPlayers;
     int lvl0PlayersScores[SCALE_MAX];
     int numLvl0Players;
