@@ -9,7 +9,7 @@ bool PlayersManager::mergeGroups(int groupId1, int groupId2) {
     if (group1 == group2) {
         return true;
     }
-    int newId = uf.unite(groupId1, groupId2);
+    int newId = uf.unite(group1->getId(), group2->getId());
     if (newId == group1->getId()) {
         group1->swallow(group2);
     }
