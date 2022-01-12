@@ -78,16 +78,14 @@ int UnionFind<T>:: findParent(int setId) {
 
 //parentValue and childValue are used so can have access to update values outside of class
 template <class T>
-int UnionFind<T>:: unite(int setId1, int setId2) { //assumes setId's point to  are valid sets for union (with no parents)
+int UnionFind<T>:: unite(int setId1, int setId2) { //assumes setId's are pointing to valid sets for union (with no parents)
     assert(setId1<num_of_groups && setId1>=0);
     assert(setId2<num_of_groups && setId2>=0);
-    int parent1 = findParent(setId1);
-    int parent2 = findParent(setId2);
-    if (parent1==parent2) { //if same set do nothing
-        return parent1;
+    if (setId1==setId2) { //if same set do nothing
+        return setId1;
     }
-    int newParent = (setArr[parent2].size > setArr[parent1].size) ? parent2 : parent1; //make sure to union by size
-    int newChild = (setArr[parent2].size > setArr[parent1].size) ? parent1 : parent2;
+    int newParent = (setArr[setId2].size > setArr[setId1].size) ? setId2 : setId1; //make sure to union by size
+    int newChild = (setArr[setId2].size > setArr[setId1].size) ? setId1 : setId2;
     setArr[newChild].parent = newParent;
     setArr[newParent].size += setArr[newChild].size;
     return newParent;
