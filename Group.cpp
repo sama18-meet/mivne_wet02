@@ -64,7 +64,15 @@ void Group::changePlayerScore(int lvl, int oldScore, int newScore) {
 }
 
 bool Group::getPercentOfPlayersWithScoreInBounds(int score, int lowerLvl, int higherLvl, double* res) const {
-    return playersTree->getPercentOfValueInKeyBounds(lowerLvl, higherLvl, score, res);
+    int keyMulInRange=0;
+    bool success = playersTree->getPercentOfValueInKeyBounds(lowerLvl, higherLvl, score, res, &keyMulInRange);
+    if (lowerLvl==0 && numLvl0Players != 0) {
+        double sum = (*res * (double)keyMulInRange)/100 + lvl0PlayersScores[score]; //TODO maybe problem of converting between float and int
+        int totalNumOfPlayers = numLvl0Players + keyMulInRange;
+        *res = 100*(sum / (double)totalNumOfPlayers);
+        return true;
+    }
+    return success;
 }
 
 bool Group::averageHighestPlayerLevelByGroup(int m, double* res) const {
@@ -79,6 +87,20 @@ bool Group::getPlayersBound(int score, int m, int* lowerBound, int* higherBound)
     if (m > numPlayers) {
         return false;
     }
-    playersTree->getValRange(score, m, lowerBound, higherBound);
+    bool success = playersTree->getValRange(score, m, lowerBound, higherBound);
+    if (!success) {
+        getValRangeLvl0Players(score, m, lowerBound, higherBound);
+    }
     return true;
+}
+
+void Group::getValRangeLvl0Players(int score, int m, int* lowerBound, int* higherBound) const {
+    int currSum = m - playersTree->getSize(); //runs after tree had been checked
+    *higherBound += fmin(currSum, lvl0PlayersScores[score]);
+    for (int i = 1; i < SCALE_MAX; ++i) {
+        if (i != score) {
+            currSum -= lvl0PlayersScores[i];
+        }
+    }
+    *lowerBound += (currSum < 0)? 0 : currSum;
 }
