@@ -202,7 +202,7 @@ typename RankTreeOPK::Node* RankTreeOPK::insertInSubtree(Node* node, int key, in
 ///////////////////////////////////////////// FIND ////////////////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-bool RankTreeOPK::getPercentOfValueInKeyBounds(int lowerKey, int higherKey, int value, double* res) const {
+bool RankTreeOPK::getPercentOfValueInKeyBounds(int lowerKey, int higherKey, int value, double* res, int* keyMulInRange) const {
     int lowerKeyMulRank = 0;
     int lowerKeySumRank = 0;
     int lowerValsMulRank[SCALE_MAX] = {0};
@@ -213,12 +213,16 @@ bool RankTreeOPK::getPercentOfValueInKeyBounds(int lowerKey, int higherKey, int 
     int higherValsMulRank[SCALE_MAX] = {0};
     int higherKeyVals[SCALE_MAX] {0};
     int higherMul = get(higherKey, &higherKeyMulRank, &higherKeySumRank, higherValsMulRank, higherKeyVals);
-    int keyMulInRange = higherKeyMulRank - lowerKeyMulRank + lowerMul;
-    int valueMulInRange = higherValsMulRank[value] - lowerValsMulRank[value] + lowerKeyVals[value];
-    if (keyMulInRange == 0) {
+    *keyMulInRange = higherKeyMulRank - lowerKeyMulRank + lowerMul;
+    int valueMulInRange=0;
+    if (value < SCALE_MAX) {
+        valueMulInRange = higherValsMulRank[value] - lowerValsMulRank[value] + lowerKeyVals[value];
+    }
+    if (*keyMulInRange == 0) {
+        *res = 0;
         return false;
     }
-    *res = 100 * (double)valueMulInRange / (double)keyMulInRange;
+    *res = 100 * (double)valueMulInRange / (double) *keyMulInRange;
     return true;
 }
 
@@ -505,27 +509,27 @@ double RankTreeOPK::getAvgHighest(int m) const {
     int sum = 0;
     int lowerBound = 0;
     int upperBound = 0;
-    if (getSumOfHighestKeys(root, m, &sum, 0, &lowerBound, &upperBound) == false) {
-        assert(root->mulInSubtree < m);
-        return -1; // there are no M players
-    }
+    getSumOfHighestKeys(root, m, &sum, 0, &lowerBound, &upperBound);
     return (double)sum / (double)m;
 }
 
 bool RankTreeOPK::getValRange(int val, int m, int* lowerBound, int* upperBound) const {
-    assert(m>0);
+    assert(m>=0);
     int sum = 0;
     *lowerBound = 0;
     *upperBound = 0;
     if (getSumOfHighestKeys(root, m, &sum, val, lowerBound, upperBound) == false) {
-        assert(root->mulInSubtree < m);
+        if (root == nullptr && m == 0) { //TODO ask sama to look not sure this is correct
+            return true;
+        }
+        assert(size < m);
         return false; // there are no M players
     }
     return true;
 }
 
 bool RankTreeOPK::getSumOfHighestKeys(Node* node, int m, int* current_sum, int val, int* lowerBound, int* upperBound) const {
-    assert(m>0);
+    assert(m>=0);
     if (node == nullptr) {
         return false;
     }
@@ -535,11 +539,11 @@ bool RankTreeOPK::getSumOfHighestKeys(Node* node, int m, int* current_sum, int v
         node = node->right;
     }
     if (prev_node == nullptr) { // didn't enter loop
-        if (node->mulInSubtree < m) { // there arent enough players
+        if (node->mulInSubtree < m) { // there aren't enough players
             return false;
         }
         else { // node->mulInSubtree == m
-            assert(node->mulInSubtree == m);
+            //assert(node->mulInSubtree == m); TODO
             *current_sum += node->keysSumInSubtree;
             *lowerBound += node->valsMul[val];
             *upperBound += node->valsMul[val];
@@ -548,7 +552,7 @@ bool RankTreeOPK::getSumOfHighestKeys(Node* node, int m, int* current_sum, int v
     }
     if (node == nullptr) {
         assert(prev_node != nullptr);
-        assert(prev_node->mul > m);
+        //assert(prev_node->mul > m); TODO check with sama why it's here
         *current_sum += m*prev_node->key;
         int not_val_mul = prev_node->mul - prev_node->vals[val];
         *lowerBound += not_val_mul >= m ? 0 : m-not_val_mul;
@@ -612,4 +616,3 @@ void RankTreeOPK::printBT() const {
     std::cout << "key, mul, mulInSubtree, vals, valsMul" << std::endl;
     printBT("", root, false);
 }
-
