@@ -10,14 +10,14 @@ private:
     int id;
     int score;
     int lvl;
-    Group* group;
+    int group;
 public:
-    Player(int id, int score, Group* group);
+    Player(int id, int score, int groupId);
     ~Player() = default;
     Player(const Player&) = default;
     int getId() const;
     int getLvl() const;
-    Group* getGroup() const;
+    int getGroupId() const;
     int getScore() const;
     void increaseLvl(int inc);
     void setScore(int newScore);

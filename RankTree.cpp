@@ -218,7 +218,10 @@ bool RankTreeOPK::getPercentOfValueInKeyBounds(int lowerKey, int higherKey, int 
     if (value < SCALE_MAX) {
         valueMulInRange = higherValsMulRank[value] - lowerValsMulRank[value] + lowerKeyVals[value];
     }
-    if (*keyMulInRange == 0) {
+    else {
+        assert(0==1);
+    }
+    if (*keyMulInRange <= 0) {
         *res = 0;
         return false;
     }
@@ -520,6 +523,8 @@ bool RankTreeOPK::getValRange(int val, int m, int* lowerBound, int* upperBound) 
     *upperBound = 0;
     if (getSumOfHighestKeys(root, m, &sum, val, lowerBound, upperBound) == false) {
         if (root == nullptr && m == 0) { //TODO ask sama to look not sure this is correct
+            *lowerBound = 0;
+            *upperBound = 0;
             return true;
         }
         assert(size < m);
@@ -540,10 +545,12 @@ bool RankTreeOPK::getSumOfHighestKeys(Node* node, int m, int* current_sum, int v
     }
     if (prev_node == nullptr) { // didn't enter loop
         if (node->mulInSubtree < m) { // there aren't enough players
+            getSumOfHighestKeys(node, node->mulInSubtree, current_sum, val, lowerBound, upperBound);
+            *current_sum = node->keysSumInSubtree;
             return false;
         }
         else { // node->mulInSubtree == m
-            //assert(node->mulInSubtree == m); TODO
+            assert(node->mulInSubtree == m);
             *current_sum += node->keysSumInSubtree;
             *lowerBound += node->valsMul[val];
             *upperBound += node->valsMul[val];
@@ -552,7 +559,7 @@ bool RankTreeOPK::getSumOfHighestKeys(Node* node, int m, int* current_sum, int v
     }
     if (node == nullptr) {
         assert(prev_node != nullptr);
-        //assert(prev_node->mul > m); TODO check with sama why it's here
+        assert(prev_node->mulInSubtree > m); //TODO check with sama why it's here
         *current_sum += m*prev_node->key;
         int not_val_mul = prev_node->mul - prev_node->vals[val];
         *lowerBound += not_val_mul >= m ? 0 : m-not_val_mul;
@@ -567,7 +574,7 @@ bool RankTreeOPK::getSumOfHighestKeys(Node* node, int m, int* current_sum, int v
     }
     // else: node->mulInsubtree < m
     *current_sum += node->keysSumInSubtree;
-    m = m - node->mulInSubtree;
+    m = m - node->mulInSubtree; // ??
     if (prev_node->mul >= m) {
         int not_val_mul = prev_node->mul - prev_node->vals[val];
         *lowerBound += not_val_mul >= m ? 0 :m-not_val_mul;
@@ -592,17 +599,17 @@ void RankTreeOPK::printBT(const std::string& prefix, const Node* node, bool isLe
     {
         std::cout << prefix;
 
-        std::cout << (isLeft ? "|--" : "^--" );
+        std::cout << (isLeft ? "|l--" : "^r--" );
 
         std::cout << "(" << node->key << ", " << node->mul <<", " << node->mulInSubtree << ", "
-                  << "[" << node->vals[0]
-                  << ", " << node->vals[1]
-                  << ", " << node->vals[2]
-                  << ", " << node->vals[3]
-                  << "], [" << node->valsMul[0]
-                  << ", " << node->valsMul[1]
-                  << ", " << node->valsMul[2]
-                  << ", " << node->valsMul[3]
+                  << "[" << node->vals[77]
+//                  << ", " << node->vals[1]
+//                  << ", " << node->vals[2]
+//                  << ", " << node->vals[3]
+                  << "], [" << node->valsMul[77]
+//                  << ", " << node->valsMul[1]
+//                  << ", " << node->valsMul[2]
+//                  << ", " << node->valsMul[3]
                   << "])" << std::endl;
 
         // enter the next tree level - left and right branch
@@ -613,6 +620,6 @@ void RankTreeOPK::printBT(const std::string& prefix, const Node* node, bool isLe
 
 void RankTreeOPK::printBT() const {
     std::cout << "printing RankTree" << std::endl;
-    std::cout << "key, mul, mulInSubtree, vals, valsMul" << std::endl;
+    //std::cout << "key, mul, mulInSubtree, vals, valsMul" << std::endl;
     printBT("", root, false);
 }

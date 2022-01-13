@@ -1,6 +1,6 @@
 #include "Player.h"
 
-Player::Player(int id, int score, Group* group) : id(id), score(score), lvl(START_LEVEL), group(group) {}
+Player::Player(int id, int score, int groupId) : id(id), score(score), lvl(START_LEVEL), group(groupId) {}
 
 int Player::getId() const {
     return this->id;
@@ -10,7 +10,7 @@ int Player::getLvl() const {
     return this->lvl;
 }
 
-Group* Player::getGroup() const {
+int Player::getGroupId() const {
     return this->group;
 }
 

@@ -16,6 +16,8 @@ void Group::swallow(Group* prey) {
     delete playersTree;
     playersTree = newPlayersTree;
     numPlayers += prey->numPlayers;
+    delete prey->playersTree;
+    prey->playersTree = nullptr;
     for (int i=0; i<SCALE_MAX; ++i) {
         lvl0PlayersScores[i] += prey->lvl0PlayersScores[i];
     }
@@ -66,7 +68,7 @@ void Group::changePlayerScore(int lvl, int oldScore, int newScore) {
 bool Group::getPercentOfPlayersWithScoreInBounds(int score, int lowerLvl, int higherLvl, double* res) const {
     int keyMulInRange=0;
     bool success = playersTree->getPercentOfValueInKeyBounds(lowerLvl, higherLvl, score, res, &keyMulInRange);
-    if (lowerLvl==0 && numLvl0Players != 0) {
+    if (lowerLvl<=0 && numLvl0Players != 0) {
         double sum = (*res * (double)keyMulInRange)/100 + lvl0PlayersScores[score]; //TODO maybe problem of converting between float and int
         int totalNumOfPlayers = numLvl0Players + keyMulInRange;
         *res = 100*(sum / (double)totalNumOfPlayers);
@@ -87,6 +89,11 @@ bool Group::getPlayersBound(int score, int m, int* lowerBound, int* higherBound)
     if (m > numPlayers) {
         return false;
     }
+    if (m==0) {
+        *lowerBound = 0;
+        *higherBound = 0;
+        return true;
+    }
     bool success = playersTree->getValRange(score, m, lowerBound, higherBound);
     if (!success) {
         getValRangeLvl0Players(score, m, lowerBound, higherBound);
@@ -95,12 +102,22 @@ bool Group::getPlayersBound(int score, int m, int* lowerBound, int* higherBound)
 }
 
 void Group::getValRangeLvl0Players(int score, int m, int* lowerBound, int* higherBound) const {
-    int currSum = m - playersTree->getSize(); //runs after tree had been checked
-    *higherBound += fmin(currSum, lvl0PlayersScores[score]);
-    for (int i = 1; i < SCALE_MAX; ++i) {
-        if (i != score) {
-            currSum -= lvl0PlayersScores[i];
-        }
+    m = m - playersTree->getSize();
+    int lvl0NotOfScore = numLvl0Players - lvl0PlayersScores[score];
+    int oldHigherBound = *higherBound;
+    if (m>=lvl0NotOfScore && m <= numLvl0Players) {
+        *lowerBound = oldHigherBound + m - lvl0NotOfScore;
     }
-    *lowerBound += (currSum < 0)? 0 : currSum;
+    else if (m>=lvl0NotOfScore && m>numLvl0Players) {
+        *lowerBound = oldHigherBound + lvl0PlayersScores[score];
+    }
+    else if (m<lvl0NotOfScore) {
+        *lowerBound = oldHigherBound;
+    }
+    if (m>=lvl0PlayersScores[score]) {
+        *higherBound += lvl0PlayersScores[score];
+    }
+    else {
+        *higherBound += m;
+    }
 }

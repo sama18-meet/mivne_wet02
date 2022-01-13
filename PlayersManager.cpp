@@ -25,7 +25,7 @@ bool PlayersManager::addPlayer(int playerId, int groupId, int score) {
         return false;
     }
     Group* group = uf.find(groupId);
-    Player* p = new Player(playerId, score, group);
+    Player* p = new Player(playerId, score, groupId);
     playersArray.insert(playerId, p);
     group->addPlayerOfLvl0(score);
     allPlayersGroup.addPlayerOfLvl0(score);
@@ -39,7 +39,7 @@ bool PlayersManager::removePlayer(int playerId) {
     }
     int lvl = p->getLvl();
     int score = p->getScore();
-    Group* g = p->getGroup();
+    Group* g = uf.find(p->getGroupId());
     g->removePlayer(lvl, score);
     allPlayersGroup.removePlayer(lvl, score);
     playersArray.remove(playerId);
@@ -55,7 +55,7 @@ bool PlayersManager::increasePlayerIdLvl(int playerId, int lvlIncrease) {
     int oldLvl = p->getLvl();
     int newLvl = oldLvl + lvlIncrease;
     int score = p->getScore();
-    Group* g = p->getGroup();
+    Group* g = uf.find(p->getGroupId());
     g->increasePlayerLvl(oldLvl, newLvl, score);
     allPlayersGroup.increasePlayerLvl(oldLvl, newLvl, score);
     p->increaseLvl(lvlIncrease);
@@ -69,7 +69,7 @@ bool PlayersManager::changePlayerIdScore(int playerId, int newScore) {
     }
     int oldScore = p->getScore();
     int lvl = p->getLvl();
-    Group* g = p->getGroup();
+    Group* g = uf.find(p->getGroupId());
     g->changePlayerScore(lvl, oldScore, newScore);
     allPlayersGroup.changePlayerScore(lvl, oldScore, newScore);
     p->setScore(newScore);
