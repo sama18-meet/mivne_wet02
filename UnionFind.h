@@ -37,8 +37,8 @@ private:
 
 template <class T>
 UnionFind<T>::UnionFind(int num_of_groups) : num_of_groups(num_of_groups+1) {
-    setArr = new Set[num_of_groups];
-    for (int i = 0; i < num_of_groups; ++i) {
+    setArr = new Set[num_of_groups + 1];
+    for (int i = 0; i < num_of_groups + 1; ++i) {
         setArr[i] = Set(i);
     }
 }

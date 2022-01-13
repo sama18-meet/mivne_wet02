@@ -124,7 +124,7 @@ public:
     RankTreeOPK& operator=(const RankTreeOPK&) = default; // shallow!
     ~RankTreeOPK();
     bool insert(int key, int val);
-    bool getPercentOfValueInKeyBounds(int lowerKey, int higherKey, int value, double* res) const;
+    bool getPercentOfValueInKeyBounds(int lowerKey, int higherKey, int value, double* res, int* keyMulInRange) const;
     bool remove(int key, int value);
     RankTreeOPK(RankTreeOPK* rt1, RankTreeOPK* rt2); // merge constructor. Does not delete old avls!
     int getSize() const;
