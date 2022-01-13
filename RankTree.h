@@ -114,7 +114,7 @@ private:
     /*
     Node* getMaxInSubtree(Node* root) const;
      */
-    void printBT(const std::string& prefix, const Node* node, bool isLeft) const;
+    void printBT(const std::string& prefix, const Node* node, bool isLeft, int score) const;
 
 
 
@@ -130,7 +130,7 @@ public:
     int getSize() const;
     double getAvgHighest(int m) const;
     bool getValRange(int val, int m, int* lowerBound, int* upperBound) const;
-    void printBT() const;
+    void printBT(int score) const;
 
 };
 

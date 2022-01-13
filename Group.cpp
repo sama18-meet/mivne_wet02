@@ -94,7 +94,11 @@ bool Group::getPlayersBound(int score, int m, int* lowerBound, int* higherBound)
         *higherBound = 0;
         return true;
     }
+    //std::cout << "calling function getPlayerBound with m=" << m << ". score=" << score << std::endl;
+    //std::cout << "numPlayersInGroup=" << numPlayers << ". numLvl0Players=" << numLvl0Players << ". nulLvl0withScore=" << lvl0PlayersScores[score] << std::endl;
+    //playersTree->printBT(score);
     bool success = playersTree->getValRange(score, m, lowerBound, higherBound);
+    //std::cout << "done with avl func. lowerBound=" << *lowerBound << ". upperBound=" << *higherBound << std::endl;
     if (!success) {
         getValRangeLvl0Players(score, m, lowerBound, higherBound);
     }
