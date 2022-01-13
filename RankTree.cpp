@@ -176,6 +176,7 @@ typename RankTreeOPK::Node* RankTreeOPK::insertInSubtree(Node* node, int key, in
         return n;
     }
     if (key == node->key) {
+        this->size += 1; //TODO this is where i added size
         node->mul += 1;
         node->mulInSubtree += 1;
         node->keysSumInSubtree += node->key;
@@ -306,6 +307,7 @@ typename RankTreeOPK::Node* RankTreeOPK::removeFromSubtree(Node* node, int key, 
             (node->vals)[value] -= 1;
             (node->valsMul)[value] -= 1;
             *success = true;
+            size -= 1; //TODO changed here
             return node;
         }
         assert(node->mul == 1);
@@ -400,8 +402,8 @@ RankTreeOPK::RankTreeOPK(RankTreeOPK* rt1, RankTreeOPK* rt2) {
     rt2->applyInorder(insertNodeInArray, arr2);
     Node* arrMerged = new Node[n1+ n2];
     int new_size = mergeSortedArrays(n1, n2, arr1, arr2, arrMerged);
-    this->size = new_size;
-    root = buildRankTreeOPKFromArray(size, arrMerged);
+    this->size = n1 + n2; //TODO changed gere
+    root = buildRankTreeOPKFromArray(new_size, arrMerged); //TODO changed gere
     delete[] arr1;
     delete[] arr2;
     delete[] arrMerged;
