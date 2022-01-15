@@ -84,7 +84,7 @@ int UnionFind<T>:: unite(int setId1, int setId2) { //assumes setId's are pointin
     if (setId1==setId2) { //if same set do nothing
         return setId1;
     }
-    int newParent = (setArr[setId2].size > setArr[setId1].size) ? setId2 : setId1; //make sure to union by size
+    int newParent = (setArr[setId2].size > setArr[setId1].size) ? setId2 : setId1; //make sure to union by numNodes
     int newChild = (setArr[setId2].size > setArr[setId1].size) ? setId1 : setId2;
     setArr[newChild].parent = newParent;
     setArr[newParent].size += setArr[newChild].size;
@@ -103,7 +103,7 @@ void UnionFind<T>::print() {
     Set set;
     for (int i = 0; i < num_of_groups; ++i) {
         set = setArr[i];
-        std::cout << "setId: " << i << " parent: " << set.parent << " size: " << set.size << std::endl;
+        std::cout << "setId: " << i << " parent: " << set.parent << " numNodes: " << set.size << std::endl;
     }
     std::cout << "----------------------------------" <<std::endl;
 }

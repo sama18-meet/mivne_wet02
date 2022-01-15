@@ -4,7 +4,7 @@
 ///////////////////////////////////////////// C'tor & D'tor ///////////////////////////////////////////////////////////
 ///////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-RankTreeOPK::RankTreeOPK() : size(0), root(nullptr) {}
+RankTreeOPK::RankTreeOPK() : numNodes(0), root(nullptr) {}
 
 RankTreeOPK::~RankTreeOPK() {
     deleteSubtree(root);
@@ -170,13 +170,12 @@ bool RankTreeOPK::insert(int key, int val) {
 // insert node into subtree and return the head of the subtree after insertion
 typename RankTreeOPK::Node* RankTreeOPK::insertInSubtree(Node* node, int key, int val, bool* success) {
     if (node == nullptr) {
-        this->size += 1;
+        this->numNodes += 1;
         Node* n = new Node(key, val);
         *success = true;
         return n;
     }
     if (key == node->key) {
-        this->size += 1; //TODO this is where i added size
         node->mul += 1;
         node->mulInSubtree += 1;
         node->keysSumInSubtree += node->key;
@@ -307,28 +306,27 @@ typename RankTreeOPK::Node* RankTreeOPK::removeFromSubtree(Node* node, int key, 
             (node->vals)[value] -= 1;
             (node->valsMul)[value] -= 1;
             *success = true;
-            size -= 1; //TODO changed here
             return node;
         }
         assert(node->mul == 1);
         if (node->right == nullptr && node->left == nullptr) {
             delete node;
             *success = true;
-            size -= 1;
+            numNodes -= 1;
             return nullptr;
         }
         else if (node->right == nullptr && node->left != nullptr) {
             Node* new_node = node->left;
             delete node;
             *success = true;
-            size -= 1;
+            numNodes -= 1;
             return new_node;
         }
         else if (node->right != nullptr && node->left == nullptr) {
             Node* new_node = node->right;
             delete node;
             *success = true;
-            size -= 1;
+            numNodes -= 1;
             return new_node;
         }
         else { //node has two sons
@@ -394,23 +392,26 @@ void RankTreeOPK:: switchNodes(Node* higher_node, Node* lower_node) {
 
 // notice that this method does not delete the two old RankTreeOPKs!
 RankTreeOPK::RankTreeOPK(RankTreeOPK* rt1, RankTreeOPK* rt2) {
-    int n1 = rt1->getSize();
-    int n2 = rt2->getSize();
-    Node* arr1 = new Node[n1];
-    Node* arr2 = new Node[n2];
+    int numNodes1 = rt1->getNumNodes();
+    int numNodes2 = rt2->getNumNodes();
+    Node* arr1 = new Node[numNodes1];
+    Node* arr2 = new Node[numNodes2];
     rt1->applyInorder(insertNodeInArray, arr1);
     rt2->applyInorder(insertNodeInArray, arr2);
-    Node* arrMerged = new Node[n1+ n2];
-    int new_size = mergeSortedArrays(n1, n2, arr1, arr2, arrMerged);
-    this->size = n1 + n2; //TODO changed gere
-    root = buildRankTreeOPKFromArray(new_size, arrMerged); //TODO changed gere
+    Node* arrMerged = new Node[numNodes1+numNodes2];
+    int newNumNodes = mergeSortedArrays(numNodes1, numNodes2, arr1, arr2, arrMerged);
+    this->numNodes = newNumNodes;
+    root = buildRankTreeOPKFromArray(newNumNodes, arrMerged); //TODO changed gere
     delete[] arr1;
     delete[] arr2;
     delete[] arrMerged;
 }
 
 int RankTreeOPK::getSize() const {
-    return this->size;
+    if (root == nullptr) {
+        return 0;
+    }
+    return this->root->mulInSubtree;
 }
 
 template <class function, class param>
@@ -526,7 +527,7 @@ bool RankTreeOPK::getValRange(int val, int m, int* lowerBound, int* upperBound) 
             *upperBound = 0;
             return true;
         }
-        assert(size < m);
+        assert(numNodes < m);
         return false; // there are no M players
     }
     return true;

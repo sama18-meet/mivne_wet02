@@ -69,7 +69,7 @@ static const char* ReturnValToStr(int val) {
     }
 }
 
-/* we assume maximum string size is not longer than 256  */
+/* we assume maximum string numNodes is not longer than 256  */
 #define MAX_STRING_INPUT_SIZE (255)
 #define MAX_BUFFER_SIZE       (255)
 

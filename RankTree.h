@@ -10,7 +10,7 @@
 
 class RankTreeOPK {
 private:
-    int size;
+    int numNodes;
     struct Node {
         int key;
         int mul;
@@ -116,6 +116,7 @@ private:
      */
     void printBT(const std::string& prefix, const Node* node, bool isLeft, int score) const;
 
+    int getNumNodes() { return this->numNodes; };
 
 
 public:

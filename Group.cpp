@@ -12,8 +12,6 @@ int Group::getId() {
 }
 
 void Group::swallow(Group* prey) {
-    std::cout << "1) "<< "numPlayers: " << numPlayers << ", numLvl0Players: " << numLvl0Players << ", playersTree->getSize(): " << playersTree->getSize() << std::endl;
-    std::cout << "2)" << "numPlayers: " << prey->numPlayers << ", numLvl0Players: " << prey->numLvl0Players << ", playersTree->getSize(): " << prey->playersTree->getSize() << std::endl;
     RankTreeOPK* newPlayersTree = new RankTreeOPK(playersTree, prey->playersTree);
     delete playersTree;
     playersTree = newPlayersTree;
@@ -24,17 +22,12 @@ void Group::swallow(Group* prey) {
         lvl0PlayersScores[i] += prey->lvl0PlayersScores[i];
     }
     numLvl0Players += prey->numLvl0Players;
-    std::cout << "3) " << "numPlayers: " << numPlayers << ", numLvl0Players: " << numLvl0Players << ", playersTree->getSize(): " << playersTree->getSize() << std::endl;
-    assert(numPlayers == (numLvl0Players + playersTree->getSize()));
 }
 
 void Group::addPlayerOfLvl0(int score) {
     lvl0PlayersScores[score]++;
     numLvl0Players++;
     numPlayers++;
-    std::cout << "id: " << id << ", score: " << score << std::endl;
-    std::cout << "numPlayers: " << numPlayers << ", numLvl0Players: " << numLvl0Players << ", playersTree->getSize(): " << playersTree->getSize() << std::endl;
-    assert(numPlayers == (numLvl0Players + playersTree->getSize()));
 }
 
 void Group::removePlayer(int lvl, int score) {
@@ -46,13 +39,9 @@ void Group::removePlayer(int lvl, int score) {
         playersTree->remove(lvl, score);
     }
     numPlayers--;
-    std::cout << "lvl: " << lvl << std::endl;
-    std::cout << "numPlayers: " << numPlayers << ", numLvl0Players: " << numLvl0Players << ", playersTree->getSize(): " << playersTree->getSize() << std::endl;
-    assert(numPlayers == (numLvl0Players + playersTree->getSize()));
 }
 
 void Group::increasePlayerLvl(int oldLvl, int newLvl, int score) {
-    std::cout << "1) " << "numPlayers: " << numPlayers << ", numLvl0Players: " << numLvl0Players << ", playersTree->getSize(): " << playersTree->getSize() << std::endl;
     assert(newLvl >0);
     if (oldLvl == 0) {
         lvl0PlayersScores[score]--;
@@ -60,32 +49,20 @@ void Group::increasePlayerLvl(int oldLvl, int newLvl, int score) {
         playersTree->insert(newLvl, score);
     }
     else {
-        if (oldLvl==13 && newLvl == 22) {
-            std::cout << "here" << std::endl;
-        }
         playersTree->remove(oldLvl, score);
-        std::cout << "3)" << "numPlayers: " << numPlayers << ", numLvl0Players: " << numLvl0Players << ", playersTree->getSize(): " << playersTree->getSize() << std::endl;
         playersTree->insert(newLvl, score);
     }
-    std::cout << "oldLvl: " << oldLvl << ", newLvl: " << newLvl << std::endl;
-    std::cout << "2) " << "numPlayers: " << numPlayers << ", numLvl0Players: " << numLvl0Players << ", playersTree->getSize(): " << playersTree->getSize() << std::endl;
-    assert(numPlayers == (numLvl0Players + playersTree->getSize()));
 }
 
 void Group::changePlayerScore(int lvl, int oldScore, int newScore) {
-    std::cout << "1)" << "numPlayers: " << numPlayers << ", numLvl0Players: " << numLvl0Players << ", playersTree->getSize(): " << playersTree->getSize() << std::endl;
     if (lvl == 0) {
         lvl0PlayersScores[oldScore]--;
         lvl0PlayersScores[newScore]++;
     }
     else {
         playersTree->remove(lvl, oldScore);
-        std::cout << "3)" << "numPlayers: " << numPlayers << ", numLvl0Players: " << numLvl0Players << ", playersTree->getSize(): " << playersTree->getSize() << std::endl;
         playersTree->insert(lvl, newScore);
     }
-    std::cout << "id: " << id << ", lvl: " << lvl << std::endl;
-    std::cout << "2)" << "numPlayers: " << numPlayers << ", numLvl0Players: " << numLvl0Players << ", playersTree->getSize(): " << playersTree->getSize() << std::endl;
-    assert(numPlayers == (numLvl0Players + playersTree->getSize()));
 }
 
 bool Group::getPercentOfPlayersWithScoreInBounds(int score, int lowerLvl, int higherLvl, double* res) const {
@@ -117,11 +94,7 @@ bool Group::getPlayersBound(int score, int m, int* lowerBound, int* higherBound)
         *higherBound = 0;
         return true;
     }
-    //std::cout << "calling function getPlayerBound with m=" << m << ". score=" << score << std::endl;
-    //std::cout << "numPlayersInGroup=" << numPlayers << ". numLvl0Players=" << numLvl0Players << ". nulLvl0withScore=" << lvl0PlayersScores[score] << std::endl;
-    //playersTree->printBT(score);
     bool success = playersTree->getValRange(score, m, lowerBound, higherBound);
-    //std::cout << "done with avl func. lowerBound=" << *lowerBound << ". upperBound=" << *higherBound << std::endl;
     if (!success) {
         getValRangeLvl0Players(score, m, lowerBound, higherBound);
     }

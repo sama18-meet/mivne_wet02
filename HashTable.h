@@ -199,7 +199,7 @@ void HashTable<T>::updateSize() {
         return;
     }
     else if (stressFactor < MIN_STRESS) {
-        if (arraySize <= START_SIZE) { //START_SIZE is the minimum size of HashTable
+        if (arraySize <= START_SIZE) { //START_SIZE is the minimum numNodes of HashTable
             return;
         }
         changeSize(DECREASE_FACTOR);
