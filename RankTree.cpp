@@ -212,7 +212,7 @@ bool RankTreeOPK::getPercentOfValueInKeyBounds(int lowerKey, int higherKey, int 
     int higherKeySumRank = 0;
     int higherValsMulRank[SCALE_MAX] = {0};
     int higherKeyVals[SCALE_MAX] {0};
-    int higherMul = get(higherKey, &higherKeyMulRank, &higherKeySumRank, higherValsMulRank, higherKeyVals);
+    get(higherKey, &higherKeyMulRank, &higherKeySumRank, higherValsMulRank, higherKeyVals);
     *keyMulInRange = higherKeyMulRank - lowerKeyMulRank + lowerMul;
     int valueMulInRange=0;
     if (value < SCALE_MAX) {
@@ -553,7 +553,7 @@ bool RankTreeOPK::getSumOfHighestKeys(Node* node, int m, int* current_sum, int v
             *current_sum += m * node->key;
             int not_val_mul = node->mul - node->vals[val];
             *lowerBound += not_val_mul >= m ? 0 : m - not_val_mul;
-            *upperBound += node->vals[val];
+            *upperBound += node->vals[val] >= m ? m : node->vals[val];
             return true;
         }
     }
