@@ -7,6 +7,10 @@ Group::Group(int id) : id(id), numPlayers(0), numLvl0Players(0) {
     }
 }
 
+Group::~Group() {
+    delete playersTree;
+}
+
 int Group::getId() {
     return id;
 }
@@ -68,10 +72,10 @@ void Group::changePlayerScore(int lvl, int oldScore, int newScore) {
 bool Group::getPercentOfPlayersWithScoreInBounds(int score, int lowerLvl, int higherLvl, double* res) const {
     int keyMulInRange=0;
     bool success = playersTree->getPercentOfValueInKeyBounds(lowerLvl, higherLvl, score, res, &keyMulInRange);
-    if (lowerLvl<=0 && numLvl0Players != 0) {
-        double sum = (*res * (double)keyMulInRange)/100 + lvl0PlayersScores[score]; //TODO maybe problem of converting between float and int
+    if (higherLvl >= 0 && lowerLvl<=0 && numLvl0Players != 0) {
+        int sum = (*res * keyMulInRange)/100 + lvl0PlayersScores[score]; //TODO maybe problem of converting between float and int
         int totalNumOfPlayers = numLvl0Players + keyMulInRange;
-        *res = 100*(sum / (double)totalNumOfPlayers);
+        *res = 100*((double)sum / (double)totalNumOfPlayers);
         return true;
     }
     return success;
